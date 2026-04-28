@@ -11,7 +11,7 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
-# ── INPUTS ──────────────────────────────────────────────
+# ── INPUTS 
 st.header("Input Data")
 st.subheader("Dimension Data")
 dim_input = st.text_input(
@@ -41,7 +41,7 @@ if st.button("Run Analysis"):
     st.divider()
 
 
-    # Parse dimension vals
+    
     vals = [float(x.strip()) for x in dim_input.split(",") if x.strip()]
 
     st.header("Dimension Analysis")
@@ -61,7 +61,7 @@ if st.button("Run Analysis"):
     else:
         st.success("All values are within tolerance.")
 
-    # Run chart
+    
    
     st.divider()
 
@@ -77,18 +77,18 @@ if st.button("Run Analysis"):
     st.write(f"**Major defect:** {top_defect} ({defects[top_defect]} count)")
 
     st.subheader("Defect Contribution")
-    for name, count in sorted_defects.items():
-        pct = 100 * count / total
-        st.write(f"- {name}: {count}  ({pct:.1f}%)")
+    for name, i in sorted_defects.items():
+        pct = 100 * i / total
+        st.write(f"- {name}: {i}  ({pct:.1f}%)")
 
     # Bar chart
-    fig2, ax2 = plt.subplots()
-    fig2.patch.set_facecolor('#384959')   
-    ax2.set_facecolor('#2F3D4C')          
+    
+    plt.figure(facecolor='#384959')
+    plt.gca().set_facecolor('#2F3D4C')
 
-    ax2.bar(sorted_defects.keys(), sorted_defects.values(), color=["#e74c3c","#3498db","#2ecc71","#f39c12"])
-    ax2.set_xlabel("Defect Type")
-    ax2.set_ylabel("Count")
-    ax2.set_title("Defect Count by Type")
-    st.pyplot(fig2)
+    plt.bar(sorted_defects.keys(), sorted_defects.values(), color=["#e74c3c","#3498db","#2ecc71","#f39c12"])
+    plt.xlabel("Defect Type")
+    plt.ylabel("Count")
+    plt.title("Defect Count by Type")
+    st.pyplot(plt)
     
