@@ -189,7 +189,7 @@ def _run_tests():
    
     _t("Paper + self=C (FLAG)",      {"digital_tools": ["None"],  "self_rating": "C"},
        "A", 1.95, expected_flag=True)
-       _t("IoT + self=B (FLAG under)",  {"digital_tools": ["IoT"],   "self_rating": "B"},
+    _t("IoT + self=B (FLAG under)",  {"digital_tools": ["IoT"],   "self_rating": "B"},
        "C", 7.7, expected_flag=True)
 
     
