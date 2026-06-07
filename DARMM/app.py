@@ -22,7 +22,8 @@ from analytics import (
     chi_awareness,
 )
 
-
+import os
+_HERE = os.path.dirname(os.path.abspath(__file__))
 # st.set_page_config must be the very first Streamlit call
 st.set_page_config(
     page_title="DARMM Self-Assessment",
@@ -523,7 +524,7 @@ with tab_self:
         # DARMM grid heatmap with respondent marker
         st.subheader("Your position on the DARMM grid")
 
-        df = pd.read_csv("Survey_Dataset_120_MSMEs.csv")
+        df = pd.read_csv(os.path.join(_HERE, "Survey_Dataset_120_MSMEs.csv"))
         density = pd.crosstab(df["DARMM_Digital_Level"], df["DARMM_LSS_Level"])
         density = density.reindex(
             index=["A", "B", "C", "D"],

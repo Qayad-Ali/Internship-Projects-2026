@@ -1,9 +1,15 @@
+import os
 import pandas as pd
 
 import plotly.graph_objects as go
 import plotly.express as px
 from scipy.stats import pearsonr, chi2_contingency
-def load_data(data_path="Survey_Dataset_120_MSMEs.csv"):
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+
+def load_data(data_path=None):
+    if data_path is None:
+        data_path = os.path.join(_HERE, "Survey_Dataset_120_MSMEs.csv")
     return pd.read_csv(data_path)
 def validate_data(df):
     issues={}
