@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 from scipy.stats import pearsonr, chi2_contingency
-def load_data(data_path=r"C:\Users\QAYAD ALI\Downloads\40811eyack.com.MAIL_xsbsxxypt8dh6!App\DARMM\DARMM\Survey_Dataset_120_MSMEs.csv"):
+def load_data(data_path="Survey_Dataset_120_MSMEs.csv"):
     return pd.read_csv(data_path)
 def validate_data(df):
     issues={}
