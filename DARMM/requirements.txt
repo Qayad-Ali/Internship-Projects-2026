@@ -2,4 +2,5 @@ streamlit
 plotly
 pandas
 scipy
-
+fpdf2
+matplotlib

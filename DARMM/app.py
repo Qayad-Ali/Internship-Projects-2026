@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import pandas as pd
 from lss_scoring import darmm_lss
 from digital_scoring import darmm_digital
+from report import generate_report
 from analytics import (
     load_data,
     descrip_all,
@@ -22,8 +23,7 @@ from analytics import (
     chi_awareness,
 )
 
-import os
-_HERE = os.path.dirname(os.path.abspath(__file__))
+
 # st.set_page_config must be the very first Streamlit call
 st.set_page_config(
     page_title="DARMM Self-Assessment",
@@ -524,7 +524,7 @@ with tab_self:
         # DARMM grid heatmap with respondent marker
         st.subheader("Your position on the DARMM grid")
 
-        df = pd.read_csv(os.path.join(_HERE, "Survey_Dataset_120_MSMEs.csv"))
+        df = pd.read_csv("Survey_Dataset_120_MSMEs.csv")
         density = pd.crosstab(df["DARMM_Digital_Level"], df["DARMM_LSS_Level"])
         density = density.reindex(
             index=["A", "B", "C", "D"],
@@ -569,8 +569,20 @@ with tab_self:
 
         st.plotly_chart(fig, use_container_width=True)
 
-        st.button("Take the survey again", on_click=restart)
+        # --- NEW: PDF download ---
+        company_name_for_pdf = st.session_state.get("q1_1", "") or "Anonymous Enterprise"
+        pdf_bytes = generate_report(
+            engine_response, lss_result, digital_result, company_name_for_pdf
+        )
+        st.download_button(
+            label="📄 Download your DARMM Assessment Report (PDF)",
+            data=pdf_bytes,
+            file_name="DARMM_Report_" + company_name_for_pdf.replace(" ", "_") + ".pdf",
+            mime="application/pdf",
+        )
+        # --- end NEW ---
 
+        st.button("Take the survey again", on_click=restart)
 
 with tab_population:
     st.header("📊 The 120-MSME Sample - Population Overview")
