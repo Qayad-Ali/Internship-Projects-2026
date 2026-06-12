@@ -1,8 +1,11 @@
 """DARMM Self-Assessment Streamlit wizard. Run: python -m streamlit run app.py"""
 
+import os
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
 from lss_scoring import darmm_lss
 from digital_scoring import darmm_digital
 from report import generate_report
@@ -524,7 +527,7 @@ with tab_self:
         # DARMM grid heatmap with respondent marker
         st.subheader("Your position on the DARMM grid")
 
-        df = pd.read_csv("Survey_Dataset_120_MSMEs.csv")
+        df = pd.read_csv(os.path.join(_HERE, "Survey_Dataset_120_MSMEs.csv"))
         density = pd.crosstab(df["DARMM_Digital_Level"], df["DARMM_LSS_Level"])
         density = density.reindex(
             index=["A", "B", "C", "D"],
