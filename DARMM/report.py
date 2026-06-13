@@ -367,16 +367,7 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
             pdf.ln(1)
     pdf.ln(4)
 
-    # ---- 8. FOOTER ----
-    pdf.set_font("Helvetica", "I", 9)
-    pdf.multi_cell(0, 5, _latin1(
-        "DARMM is a research framework from NIT Calicut measuring two axes of "
-        "manufacturing maturity: Lean Six Sigma maturity (L1-L5) and Digital "
-        "Readiness (A-D). This report compares your enterprise against a "
-        "sample of 120 Bangalore MSMEs surveyed in 2026. "
-        "Research: Jith John Francis (P230090ME), supervised by "
-        "Dr. Vinay V. Panicker."
-    ))
+   
     
 
     return bytes(pdf.output())
