@@ -4,7 +4,8 @@ import os
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
-
+from db import save_response
+from report import get_pathway
 _HERE = os.path.dirname(os.path.abspath(__file__))
 from lss_scoring import darmm_lss
 from digital_scoring import darmm_digital
@@ -511,6 +512,20 @@ with tab_self:
         # Call the scoring engines
         lss_result = darmm_lss(engine_response)
         digital_result = darmm_digital(engine_response)
+        # Save to Supabase (once per session)
+        if not st.session_state.get("_response_saved"):
+            cluster_name_db, _, _, source_db = get_pathway(
+                lss_result["lss_level"], digital_result["digital_level"]
+            )
+            success, err = save_response(
+                st.session_state, lss_result, digital_result,
+                cluster_name_db, source_db
+            )
+            if success:
+                st.session_state["_response_saved"] = True
+                st.toast("Response saved to database", icon="✅")
+            else:
+                st.warning("Could not save to database: " + str(err))
         position = lss_result["lss_level"] + "-" + digital_result["digital_level"]
 
         st.success("Form submitted. Here is your DARMM position:")
