@@ -593,7 +593,7 @@ with tab_self:
             engine_response, lss_result, digital_result, company_name_for_pdf
         )
         st.download_button(
-            label="📄 Download your DARMM Assessment Report (PDF)",
+            label=" Download your DARMM Assessment Report (PDF)",
             data=pdf_bytes,
             file_name="DARMM_Report_" + company_name_for_pdf.replace(" ", "_") + ".pdf",
             mime="application/pdf",
