@@ -31,7 +31,7 @@ from analytics import (
 # st.set_page_config must be the very first Streamlit call
 st.set_page_config(
     page_title="DARMM Self-Assessment",
-    page_icon="📊",
+   
     layout="wide",
 )
 
@@ -115,7 +115,7 @@ st.markdown(
 
 
 # TWO TABS: Self-Assessment wizard + Population Overview dashboard
-tab_self, tab_population = st.tabs(["🧪 Self-Assessment", "📊 Population Overview"])
+tab_self, tab_population = st.tabs([" Self-Assessment", "Population Overview"])
 
 
 with tab_self:
@@ -128,7 +128,7 @@ with tab_self:
 
     # PAGE 0 - SECTION 1 (Company Profile)
     if st.session_state.page == 0:
-        st.header("📋 Section 1 - Company Profile")
+        st.header("Section 1 - Company Profile")
 
         st.text_input("1.1  Company name (optional)", key="q1_1")
 
@@ -171,7 +171,7 @@ with tab_self:
 
     # PAGE 1 - SECTION 2 (Awareness)
     elif st.session_state.page == 1:
-        st.header("🧠 Section 2 - Awareness")
+        st.header(" Section 2 - Awareness")
 
         st.radio("2.1  Have you heard of Lean Manufacturing?", ["Yes", "No"], key="q2_1")
 
@@ -209,7 +209,7 @@ with tab_self:
 
     # PAGE 2 - SECTION 3 (Adoption)
     elif st.session_state.page == 2:
-        st.header("🛠️ Section 3 - Adoption")
+        st.header(" Section 3 - Adoption")
 
         # Q3.1 is MANDATORY
         st.radio(
@@ -287,7 +287,7 @@ with tab_self:
 
     # PAGE 3 - SECTION 4 (Barriers)
     elif st.session_state.page == 3:
-        st.header("🚧 Section 4 - Barriers")
+        st.header(" Section 4 - Barriers")
 
         st.multiselect(
             "4.1  Main challenges preventing or limiting LSS adoption (select up to 3)",
@@ -345,7 +345,7 @@ with tab_self:
 
     # PAGE 4 - SECTION 5 (Digital Technology Adoption)
     elif st.session_state.page == 4:
-        st.header("💻 Section 5 - Digital Technology Adoption")
+        st.header(" Section 5 - Digital Technology Adoption")
 
         st.multiselect(
             "5.1  What digital tools does your enterprise currently use? (select all that apply)",
@@ -394,7 +394,7 @@ with tab_self:
 
     # PAGE 5 - RESULT (scoring + DARMM heatmap)
     elif st.session_state.page == 5:
-        st.header("🎯 Your DARMM Result")
+        st.header(" Your DARMM Result")
 
         # Safety check
         if st.session_state.get("q2_4") is None or st.session_state.get("q3_1") is None:
@@ -523,7 +523,7 @@ with tab_self:
             )
             if success:
                 st.session_state["_response_saved"] = True
-                st.toast("Response saved to database", icon="✅")
+                st.toast("Response saved to database")
             else:
                 st.warning("Could not save to database: " + str(err))
         position = lss_result["lss_level"] + "-" + digital_result["digital_level"]
@@ -603,7 +603,7 @@ with tab_self:
         st.button("Take the survey again", on_click=restart)
 
 with tab_population:
-    st.header("📊 The 120-MSME Sample - Population Overview")
+    st.header(" The 120-MSME Sample - Population Overview")
     st.caption("Findings from the 120 Bangalore MSMEs surveyed in this study.")
 
     df_pop = load_data()
