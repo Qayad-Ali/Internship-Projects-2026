@@ -348,7 +348,7 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
     pdf.ln(4)
 
     #  6. RECOMMENDATION PATHWAY
-          pdf.add_page() 
+    pdf.add_page() 
     cluster_name, pathway, actions, source = get_pathway(
         lss_result["lss_level"], digital_result["digital_level"]
     )
