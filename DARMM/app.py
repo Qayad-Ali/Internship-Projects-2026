@@ -115,7 +115,7 @@ st.markdown(
 
 
 # TWO TABS: Self-Assessment wizard + Population Overview dashboard
-tab_self, tab_population = st.tabs([" Self-Assessment", "Population Overview"])
+tab_self = st.tabs([" Self-Assessment"])
 
 
 with tab_self:
@@ -602,73 +602,3 @@ with tab_self:
 
         st.button("Take the survey again", on_click=restart)
 
-with tab_population:
-    st.header(" The 120-MSME Sample - Population Overview")
-    st.caption("Findings from the 120 Bangalore MSMEs surveyed in this study.")
-
-    df_pop = load_data()
-
-    # HEADLINE PERCENTAGES as metric cards (not raw JSON)
-    st.subheader("Headline percentages")
-    headline = descrip_all(df_pop)
-
-    row1_c1, row1_c2, row1_c3 = st.columns(3)
-    row1_c1.metric("Sample size",              str(headline["n"]))
-    row1_c2.metric("Lean aware",               f"{headline['lean_aware_pct']}%")
-    row1_c3.metric("Six Sigma aware",          f"{headline['ss_aware_pct']}%")
-
-    row2_c1, row2_c2, row2_c3 = st.columns(3)
-    row2_c1.metric("Lean implemented",         f"{headline['lean_implemented_pct']}%")
-    row2_c2.metric("Six Sigma implemented",    f"{headline['ss_implemented_pct']}%")
-    row2_c3.metric("Willing to pilot",         f"{headline['pilot_willing_pct']}%")
-
-    st.divider()
-
-    # TABLES
-    st.subheader("Tool adoption rates")
-    st.dataframe(descrip_tools(df_pop), use_container_width=True)
-
-    st.subheader("Table 4.1 - Sample distribution")
-    st.dataframe(table_4_1_sample_distri(df_pop), use_container_width=True)
-
-    st.subheader("Table 4.2 - Digital readiness by MSME size")
-    st.dataframe(table_4_2_digital(df_pop), use_container_width=True)
-
-    st.subheader("Table 4.5 - DARMM grid counts")
-    st.dataframe(table_4_5_darmm(df_pop), use_container_width=True)
-
-    st.divider()
-
-    # STATISTICAL FINDINGS - clean prose with metric cards (not raw JSON)
-    st.subheader("Statistical findings")
-
-    pear = pearson_lss_digi(df_pop)
-    chi  = chi_awareness(df_pop)
-
-    # Pearson - LSS vs Digital
-    st.markdown("**Pearson correlation — LSS maturity × Digital readiness**")
-    p_c1, p_c2, p_c3 = st.columns(3)
-    p_c1.metric("r (correlation)", f"{pear['r']:.3f}")
-    p_c2.metric("p-value",         f"{pear['p']:.2e}")
-    p_c3.metric("n",               str(pear["n"]))
-    
-
-    st.write("")  # small spacer
-
-    # Chi-square - awareness x adoption
-    st.markdown("**Chi-square test — LSS awareness × adoption**")
-    c_c1, c_c2, c_c3, c_c4 = st.columns(4)
-    c_c1.metric("χ²",      f"{chi['chi square']:.2f}")
-    c_c2.metric("p-value", f"{chi['p']:.2e}")
-    c_c3.metric("dof",     str(chi["dof"]))
-    c_c4.metric("n",       str(chi["n"]))
-    
-
-    st.divider()
-
-    # CHARTS
-    st.subheader("Charts")
-    st.plotly_chart(chart_lss_bysize(df_pop),         use_container_width=True)
-    st.plotly_chart(chart_adopt_bysize(df_pop),       use_container_width=True)
-    st.plotly_chart(chart_barr_freq(df_pop),          use_container_width=True)
-    st.plotly_chart(chart_awareness_adopt_gap(df_pop), use_container_width=True)
