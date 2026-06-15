@@ -115,7 +115,7 @@ st.markdown(
 
 
 # TWO TABS: Self-Assessment wizard + Population Overview dashboard
-tab_self = st.tabs([" Self-Assessment"])
+tab_self = st.container()
 
 
 with tab_self:
