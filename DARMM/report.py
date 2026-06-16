@@ -43,7 +43,7 @@ diagonal_map={
 
 OFF_DIAGONAL_PATHWAYS = {
 
-    # ---------------- Digital-lagging wing ----------------
+   
 
     ("L4", "A"): (
         "Advanced Lean capability established; paper records are now the "
@@ -213,8 +213,8 @@ cluster_actions = {
 
 
 def _latin1(text):
-    replacements={"\u2013": "-",     # en dash
-        "\u2014": " - ",   # em dash
+    replacements={"\u2013": "-",     
+        "\u2014": " - ",  
         "\u2018": "'",
         "\u2019": "'",
         "\u201c": '"',
@@ -292,7 +292,7 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
     pdf = FPDF()
     pdf.add_page()
 
-    # ---- 1. COVER ----
+    #  COVER 
     pdf.set_font("Helvetica", "B", 20)
     pdf.cell(0, 12, _latin1("DARMM Self Assessment Report"), ln=True, align="C")
     pdf.set_font("Helvetica", "", 11)
@@ -300,7 +300,7 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
     pdf.cell(0, 6, "Date: " + datetime.now().strftime("%d %B %Y"), ln=True, align="C")
     pdf.ln(6)
 
-    # ---- 2. EXECUTIVE SUMMARY ----
+    #  EXECUTIVE SUMMARY 
     position = lss_result["lss_level"] + "-" + digital_result["digital_level"]
     pdf.set_font("Helvetica", "B", 15)
     pdf.cell(0, 10, "Your DARMM Position: " + position, ln=True)
@@ -318,7 +318,7 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
     )
     pdf.ln(2)
 
-    # ---- 3. GRID POSITION PLOT ----
+    #3. GRID POSITION PLOT 
     grid_path = make_grid_image(lss_result["lss_level"], digital_result["digital_level"])
     pdf.image(grid_path, x=30, w=150)
     pdf.ln(4)
@@ -327,7 +327,7 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
     except OSError:
         pass
 
-    # ---- 4. LSS SECTION ----
+    #  4. LSS SECTION 
     pdf.set_font("Helvetica", "B", 13)
     pdf.cell(0, 8, "Lean Six Sigma Maturity", ln=True)
     pdf.set_font("Helvetica", "", 11)
@@ -335,7 +335,7 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
     pdf.multi_cell(0, 6, _latin1(lss_result["lss_level_desc"]))
     pdf.ln(4)
 
-    # ---- 5. DIGITAL SECTION + discrepancy flag ----
+    # . DIGITAL SECTION + discrepancy flag
     pdf.set_font("Helvetica", "B", 13)
     pdf.cell(0, 8, "Digital Readiness", ln=True)
     pdf.set_font("Helvetica", "", 11)
@@ -347,7 +347,8 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
         pdf.multi_cell(0, 5, _latin1("Note: " + digital_result["discrepancy_flag"]))
     pdf.ln(4)
 
-    # ---- 6. RECOMMENDATION PATHWAY ----
+    #  6. RECOMMENDATION PATHWAY
+    pdf.add_page() 
     cluster_name, pathway, actions, source = get_pathway(
         lss_result["lss_level"], digital_result["digital_level"]
     )
@@ -357,7 +358,7 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
     pdf.multi_cell(0, 6, pathway)
     pdf.ln(3)
 
-    # ---- 7. THREE FIRST ACTIONS ----
+#7. THREE FIRST ACTIONS 
     if actions:
         pdf.set_font("Helvetica", "B", 12)
         pdf.cell(0, 8, "Your first three actions", ln=True)
@@ -367,16 +368,7 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
             pdf.ln(1)
     pdf.ln(4)
 
-    # ---- 8. FOOTER ----
-    pdf.set_font("Helvetica", "I", 9)
-    pdf.multi_cell(0, 5, _latin1(
-        "DARMM is a research framework from NIT Calicut measuring two axes of "
-        "manufacturing maturity: Lean Six Sigma maturity (L1-L5) and Digital "
-        "Readiness (A-D). This report compares your enterprise against a "
-        "sample of 120 Bangalore MSMEs surveyed in 2026. "
-        "Research: Jith John Francis (P230090ME), supervised by "
-        "Dr. Vinay V. Panicker."
-    ))
+   
     
 
     return bytes(pdf.output())
