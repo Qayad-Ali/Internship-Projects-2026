@@ -115,7 +115,7 @@ st.markdown(
 
 
 # TWO TABS: Self-Assessment wizard + Population Overview dashboard
-tab_self, tab_population = st.tabs(["🧪 Self-Assessment", "📊 Population Overview"])
+tab_self=st.container()
 
 
 with tab_self:
@@ -541,18 +541,19 @@ with tab_self:
 
         # DARMM grid heatmap with respondent marker
         st.subheader("Your position on the DARMM grid")
-
-        df = pd.read_csv(os.path.join(_HERE, "Survey_Dataset_120_MSMEs.csv"))
-        density = pd.crosstab(df["DARMM_Digital_Level"], df["DARMM_LSS_Level"])
-        density = density.reindex(
-            index=["A", "B", "C", "D"],
-            columns=["L1", "L2", "L3", "L4", "L5"],
-            fill_value=0,
-        )
+        from db import fetch_all_responses
+        df=fetch_all_responses()
+        if df.empty or "darmm_position" not in df.columns:
+            density=pd.DataFrame(0,index=["A","B","C","D"],columns=["L1","L2","L3","L4","L5"])
+            n_total=0
+        else:
+            density=pd.crosstab(df["digital_level"],df["lss_level"])
+            density=density.reindex(index=["A","B","C","D"],columns=["L1","L2","L3","L4","L5"],fill_value=0,)
+            n_total=len(df)
 
         fig = go.Figure()
 
-        # Layer 1: heatmap background
+        # Layer 1: the heatmap (background colour = number of enterprises)
         fig.add_trace(go.Heatmap(
             z=density.values,
             x=density.columns.tolist(),
@@ -565,6 +566,7 @@ with tab_self:
             colorbar=dict(title="Enterprises"),
         ))
 
+        
         # Layer 2: red dot at the respondent's position
         fig.add_trace(go.Scatter(
             x=[lss_result["lss_level"]],
@@ -580,13 +582,128 @@ with tab_self:
         ))
 
         fig.update_layout(
+            title="Sector heatmap (n="+str(n_total)+ "MSMEs)",
             xaxis_title="LSS Operational Maturity",
             yaxis_title="Digital Readiness",
             height=450,
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
+
+        st.divider()
+        st.subheader("Dashboard 1 - who responded")
+        if df.empty or len(df)<2:
+            st.info("Profile dashboard will populate as more MSMEs submit responses")
+        else:
+            col1,col2=st.columns(2)
+            with col1:
+                st.markdown("**Distribution by company size**")
+                size_order=["Micro (1-9 employees)","Small (10-49 employees)","Medium (50-249 employees)"]
+                size_counts=df["size_category"].value_counts().reindex(size_order,fill_value=0)
+                fig_size=go.Figure(go.Bar(x=size_counts.index.tolist(),y=size_counts.values.tolist(),marker_color="#1a3f7f",text=size_counts.values.tolist(),textposition="outside",))
+                fig_size.update_layout(height=320,xaxis_title="",yaxis_title="Number of MSMEs",showlegend=False,margin=dict(t=30,b=80),)    
+                st.plotly_chart(fig_size,width='stretch')
+            with col2:
+                st.markdown("**Distribution by Customer Type**")
+                cust_counts=df["primary_customer"].value_counts()
+                fig_cust=go.Figure(go.Bar(
+                    x=cust_counts.values.tolist(),y=cust_counts.index.tolist(),orientation="h",marker_color="#70AD47",text=cust_counts.values.tolist(),textposition="outside",))
+                fig_cust.update_layout(height=320,xaxis_title="Number of MSMEs",yaxis_title="",showlegend=False,margin=dict(l=10,r=30),)
+                st.plotly_chart(fig_cust,width='stretch')
+        st.divider()
+        st.subheader("Dashboard 2-LSS Awareness and adoption")
+        if df.empty or len(df)<2:
+            st.info("Awareness dashboard will populate as more MSMEs submit responses")
+        else:
+            st.markdown("**Lean vs Six Sigma Awareness by company size**")
+            size_order=["Micro (1-9 employees)","Small (10-49 employees)","Medium (50-249 employees)"]
+            aware_by_size=df.groupby("size_category").agg(lean_aware_pct=("lean_awareness","mean")   ,ss_aware_pct=("ss_awareness","mean"),)
+            aware_by_size=(aware_by_size*100).reindex(size_order,fill_value=0)
+            fig_aware=go.Figure()
+            fig_aware.add_trace(go.Bar(name="Lean Awareness",x=aware_by_size.index.tolist(),y=aware_by_size["lean_aware_pct"].tolist(),marker_color="#4472c4",text=[str(int(v))+"%" for v in aware_by_size["lean_aware_pct"].tolist()],textposition="auto",) )
+            fig_aware.add_trace(go.Bar(name="Six Sigma Awareness",x=aware_by_size.index.tolist(),y=aware_by_size["ss_aware_pct"].tolist(),marker_color="#F1843B",text=[str(int(v))+"%" for v in aware_by_size["ss_aware_pct"].tolist()],textposition="auto"))
+            fig_aware.update_layout(barmode="group",height=350,xaxis_title="",yaxis_title="% of MSMEs aware",legend=dict(orientation="h",yanchor="bottom",y=-0.4),margin=dict(b=100),)
+            st.plotly_chart(fig_aware,width='stretch') 
+
+            col1,col2=st.columns(2)
+            with col1:
+                st.markdown("**LSS Adoption Funnel**")
+                n_total=len(df)
+                n_aware=int((df["lean_awareness"]==1).sum())
+                n_impl_raw=int((df["lean_implemented"]==1).sum())
+                tool_cols=["tool_5s","tool_kaizen","tool_vsm","tool_kanban","tool+pokayoke"]
+                tool_cols_exist=[c for c in tool_cols if c in df.columns]
+                if tool_cols_exist:
+                    n_tools_per_row=df[tool_cols_exist].sum(axis=1)
+                    n_structured=int(((df["lean_implemented"]==1) & (n_tools_per_row>=2)).sum())
+                else:
+                    n_structured=0
+                fig_funnel=go.Figure(go.Funnel(y=["Total respondents","Lean aware","Lean implemented","Structured(2+ tools)"],x=[n_total,n_aware,n_impl_raw,n_structured],marker_color=["#4472C4","#5B9BD5","#70AD47","#A9D08E"],
+                                               textposition="inside",textinfo="value+percent initial",))
+                fig_funnel.update_layout(height=400,margin=dict(l=20,r=10,t=20,b=20),)
+                st.plotly_chart(fig_funnel,width='stretch')
+            with col2:
+                st.markdown("**Most Common Lean Tools**")
+                tool_labels = {
+                    "tool_5s": "5S",
+                    "tool_kaizen": "Kaizen",
+                    "tool_vsm": "VSM",
+                    "tool_kanban": "Kanban",
+                    "tool_pokayoke": "Poka-Yoke",
+                }   
+                tool_data=[]
+                for col,label in tool_labels.items():
+                    if col in df.columns:
+                        tool_data.append({"Tool":label,"Adoption":int((df[col]==1).sum())})
+                tool_df=pd.DataFrame(tool_data).sort_values("Adoption",ascending=True)
+                fig_tools=go.Figure(go.Bar(x=tool_df["Adoption"].tolist(),y=tool_df["Tool"].tolist(),orientation="h",marker_color="#7030A0",text=tool_df["Adoption"].tolist(),textposition="outside"))
+                fig_tools.update_layout(height=400,xaxis_title="Number of MSMEs",yaxis_title="",margin=dict(l=10,r=40),) 
+                st.plotly_chart(fig_tools,width='stretch')       
+
+
+                
+        st.divider()
+        st.subheader("Dashboard 3- Barriers to LSS Adoption")
+        if df.empty or len(df)<2:
+            st.info("Barriers dashboard will populate as more MSMEs submits responses")
+        else:
+            def barrier_short(text):
+                if not isinstance(text,str):
+                    return "?"
+                if text=="Other":
+                    return "Other"
+                if ":" in text:
+                    return text.split(":",1)[0].strip()
+                return text[:8]
+            st.markdown("**All Barriers ranked by Frequencies**")
+            barrier_counts=df["barriers"].explode().dropna().value_counts()
+            fig_pareto=go.Figure(go.Bar(x=barrier_counts.values.tolist(),y=barrier_counts.index.tolist(),orientation="h",marker_color="#C00000",text=barrier_counts.values.tolist(),textposition="outside",))   
+            fig_pareto.update_layout(height=400,xaxis_title="Number of MSMEs citing this barrier",yaxis_title="",yaxis=dict(autorange="reversed"),margin=dict(l=10,r=40),)
+            st.plotly_chart(fig_pareto,width='stretch')
+            col1,col2=st.columns(2)
+            with col1:
+                st.markdown("**Top 3 barriers by company sizes**")
+                top3_barriers=barrier_counts.head(3).index.tolist()
+                exploded = df[["size_category", "barriers"]].explode("barriers")
+                exploded = exploded[exploded["barriers"].isin(top3_barriers)]
+                exploded["barrier_short"] = exploded["barriers"].apply(barrier_short)
+                cross=pd.crosstab(exploded["barrier_short"],exploded["size_category"]) 
+                fig_grouped=go.Figure()
+                for size in cross.columns:
+                    fig_grouped.add_trace(go.Bar(name=size,x=cross.index.tolist(),y=cross[size].tolist(),))
+                fig_grouped.update_layout(height=350,barmode="group",xaxis_title="",yaxis_title="Count",legend=dict(orientation="h",yanchor="bottom",y=-0.45),margin=dict(b=120),)
+                st.plotly_chart(fig_grouped,width='stretch')
+            with col2:
+                st.markdown("**Do MSMEs believe LSS can benefit them?**")
+                belief_counts=df["lss_benefit_belief"].dropna().value_counts()
+                fig_belief=go.Figure(go.Pie(labels=belief_counts.index.tolist(),values=belief_counts.values.tolist(),hole=0.4,marker=dict(colors=["#70AD47","#FFC000","#C00000"]),
+                                            ))
+                fig_belief.update_layout(height=350,legend=dict(orientation="h",yanchor="bottom",y=-0.25),margin=dict(t=20,b=80),
+                                         )        
+                st.plotly_chart(fig_belief,width='stretch')
+                    
+                   
         # --- NEW: PDF download ---
         company_name_for_pdf = st.session_state.get("q1_1", "") or "Anonymous Enterprise"
         pdf_bytes = generate_report(
@@ -602,73 +719,3 @@ with tab_self:
 
         st.button("Take the survey again", on_click=restart)
 
-with tab_population:
-    st.header("📊 The 120-MSME Sample - Population Overview")
-    st.caption("Findings from the 120 Bangalore MSMEs surveyed in this study.")
-
-    df_pop = load_data()
-
-    # HEADLINE PERCENTAGES as metric cards (not raw JSON)
-    st.subheader("Headline percentages")
-    headline = descrip_all(df_pop)
-
-    row1_c1, row1_c2, row1_c3 = st.columns(3)
-    row1_c1.metric("Sample size",              str(headline["n"]))
-    row1_c2.metric("Lean aware",               f"{headline['lean_aware_pct']}%")
-    row1_c3.metric("Six Sigma aware",          f"{headline['ss_aware_pct']}%")
-
-    row2_c1, row2_c2, row2_c3 = st.columns(3)
-    row2_c1.metric("Lean implemented",         f"{headline['lean_implemented_pct']}%")
-    row2_c2.metric("Six Sigma implemented",    f"{headline['ss_implemented_pct']}%")
-    row2_c3.metric("Willing to pilot",         f"{headline['pilot_willing_pct']}%")
-
-    st.divider()
-
-    # TABLES
-    st.subheader("Tool adoption rates")
-    st.dataframe(descrip_tools(df_pop), use_container_width=True)
-
-    st.subheader("Table 4.1 - Sample distribution")
-    st.dataframe(table_4_1_sample_distri(df_pop), use_container_width=True)
-
-    st.subheader("Table 4.2 - Digital readiness by MSME size")
-    st.dataframe(table_4_2_digital(df_pop), use_container_width=True)
-
-    st.subheader("Table 4.5 - DARMM grid counts")
-    st.dataframe(table_4_5_darmm(df_pop), use_container_width=True)
-
-    st.divider()
-
-    # STATISTICAL FINDINGS - clean prose with metric cards (not raw JSON)
-    st.subheader("Statistical findings")
-
-    pear = pearson_lss_digi(df_pop)
-    chi  = chi_awareness(df_pop)
-
-    # Pearson - LSS vs Digital
-    st.markdown("**Pearson correlation — LSS maturity × Digital readiness**")
-    p_c1, p_c2, p_c3 = st.columns(3)
-    p_c1.metric("r (correlation)", f"{pear['r']:.3f}")
-    p_c2.metric("p-value",         f"{pear['p']:.2e}")
-    p_c3.metric("n",               str(pear["n"]))
-    
-
-    st.write("")  # small spacer
-
-    # Chi-square - awareness x adoption
-    st.markdown("**Chi-square test — LSS awareness × adoption**")
-    c_c1, c_c2, c_c3, c_c4 = st.columns(4)
-    c_c1.metric("χ²",      f"{chi['chi square']:.2f}")
-    c_c2.metric("p-value", f"{chi['p']:.2e}")
-    c_c3.metric("dof",     str(chi["dof"]))
-    c_c4.metric("n",       str(chi["n"]))
-    
-
-    st.divider()
-
-    # CHARTS
-    st.subheader("Charts")
-    st.plotly_chart(chart_lss_bysize(df_pop),         use_container_width=True)
-    st.plotly_chart(chart_adopt_bysize(df_pop),       use_container_width=True)
-    st.plotly_chart(chart_barr_freq(df_pop),          use_container_width=True)
-    st.plotly_chart(chart_awareness_adopt_gap(df_pop), use_container_width=True)
