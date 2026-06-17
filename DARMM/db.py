@@ -56,6 +56,19 @@ def get_client() -> Client:
     return create_client(url, key)
 
 
+def fetch_all_responses():
+   
+    import pandas as pd
+    try:
+        client = get_client()
+        result = client.table("responses").select("*").execute()
+        if result.data:
+            return pd.DataFrame(result.data)
+        return pd.DataFrame()
+    except Exception:
+        return pd.DataFrame()
+
+
 def _yn(v):
     """Yes/No -> 1/0. Returns None if v is None."""
     if v is None:
