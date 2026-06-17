@@ -1,10 +1,8 @@
-"""DARMM Supabase client - saves each survey submission to the database."""
 
 from supabase import create_client, Client
 import streamlit as st
 
 
-# Display-string -> DB-column mappings
 LEAN_TOOL_DB_KEYS = {
     "5S (Workplace Organisation)": "tool_5s",
     "Kaizen (Continuous Improvement Events)": "tool_kaizen",
@@ -50,7 +48,7 @@ SELF_RATING_MAP = {
 
 
 def get_client() -> Client:
-    """Build the Supabase client from Streamlit secrets."""
+
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
     return create_client(url, key)
@@ -70,14 +68,14 @@ def fetch_all_responses():
 
 
 def _yn(v):
-    """Yes/No -> 1/0. Returns None if v is None."""
+    
     if v is None:
         return None
     return 1 if v == "Yes" else 0
 
 
 def _tools_to_columns(selected, mapping):
-    """Convert a multiselect list into per-column 0/1 flags."""
+
     cols = {db_key: 0 for db_key in mapping.values()}
     for label in selected or []:
         if label in mapping:
@@ -88,7 +86,7 @@ def _tools_to_columns(selected, mapping):
 def build_row(session_state, lss_result, digital_result, cluster_name, source):
     """Translate Streamlit session_state + engine output into a DB row dict."""
     row = {
-        # Section 1
+       
         "company_name": session_state.get("q1_1") or None,
         "industry_segment": session_state.get("q1_2"),
         "size_category": session_state.get("q1_3"),
@@ -96,37 +94,34 @@ def build_row(session_state, lss_result, digital_result, cluster_name, source):
         "primary_customer": session_state.get("q1_5"),
         "cluster_location": session_state.get("q1_6"),
 
-        # Section 2
         "lean_awareness": _yn(session_state.get("q2_1")),
         "ss_awareness": _yn(session_state.get("q2_2")),
         "learning_channels": session_state.get("q2_3", []),
         "knowledge_level": KNOWLEDGE_LEVEL_MAP.get(session_state.get("q2_4")),
 
-        # Section 3 - Lean
         "lean_implemented": _yn(session_state.get("q3_1")),
         "lean_other": session_state.get("q3_2_other") or None,
 
-        # Section 3 - Six Sigma
+    
         "ss_implemented": _yn(session_state.get("q3_3")),
         "ss_other": session_state.get("q3_4_other") or None,
 
-        # Section 3 - Motivation / Benefits
+        
         "primary_motivation": session_state.get("q3_5", []),
         "benefits_observed": session_state.get("q3_6", []),
 
-        # Section 4
+       
         "barriers": session_state.get("q4_1", []),
         "lss_benefit_belief": session_state.get("q4_2"),
         "support_needed": session_state.get("q4_3", []),
         "pilot_willing": _yn(session_state.get("q4_4")),
 
-        # Section 5
+       
         "digital_other": session_state.get("q5_1_other") or None,
         "self_rating": SELF_RATING_MAP.get(session_state.get("q5_2")),
         "digital_investment_plan": session_state.get("q5_3"),
         "interview_willing": _yn(session_state.get("q5_4")),
 
-        # Engine outputs
         "lss_score": lss_result["lss_score"],
         "lss_level": lss_result["lss_level"],
         "digital_score": digital_result["digital_score"],
@@ -137,7 +132,6 @@ def build_row(session_state, lss_result, digital_result, cluster_name, source):
         "discrepancy_flag": digital_result.get("discrepancy_flag"),
     }
 
-    # Add the tool binary columns
     row.update(_tools_to_columns(session_state.get("q3_2_tools", []), LEAN_TOOL_DB_KEYS))
     row.update(_tools_to_columns(session_state.get("q3_4_tools", []), SS_TOOL_DB_KEYS))
     row.update(_tools_to_columns(session_state.get("q5_1_tools", []), DIGITAL_TOOL_DB_KEYS))

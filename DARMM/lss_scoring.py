@@ -1,4 +1,3 @@
-"""LSS scoring engine: converts a survey response dict into a score (0-20+) and L1-L5 level."""
 
 from lss_other_field import score_other_field
 
@@ -213,12 +212,7 @@ def _run_tests():
 
 
 def validate_against_dataset(csv_path="Survey_Dataset_120_MSMEs.csv"):
-    """
-    Reproduces the Week 1 Friday validation step on the 120-MSME CSV.
-    The CSV does not yet contain Other-field columns, so this only
-    exercises the standard scoring path (which must remain unchanged
-    from the original engine to preserve the Chapter 4 numbers).
-    """
+
     import pandas as pd
     from scipy.stats import pearsonr, chi2_contingency
 

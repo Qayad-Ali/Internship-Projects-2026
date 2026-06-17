@@ -43,7 +43,7 @@ diagonal_map={
 
 OFF_DIAGONAL_PATHWAYS = {
 
-   
+
 
     ("L4", "A"): (
         "Advanced Lean capability established; paper records are now the "
@@ -66,7 +66,7 @@ OFF_DIAGONAL_PATHWAYS = {
         "valuable once ERP data exists; sequence it after."
     ),
 
-    # ---------------- Lean-lagging / digital-first wing ----------------
+
 
     ("L4", "D"): (
         "Advanced Lean practice with IIoT infrastructure already in place. "
@@ -213,8 +213,8 @@ cluster_actions = {
 
 
 def _latin1(text):
-    replacements={"\u2013": "-",     
-        "\u2014": " - ",  
+    replacements={"\u2013": "-",     # en dash
+        "\u2014": " - ",   # em dash
         "\u2018": "'",
         "\u2019": "'",
         "\u201c": '"',
@@ -255,44 +255,54 @@ def compute_percentiles(lss_score,digital_score):
     return round(lss_pct), round(dig_pct)
 
 
-def make_grid_image(lss_level,digital_level):
-    df=pd.read_csv(_CSV_PATH) 
-    density=pd.crosstab(df["DARMM_Digital_Level"],df["DARMM_LSS_Level"])
-    density=density.reindex(index=["A","B","C","D"],columns=["L1","L2","L3","L4","L5"],fill_value=0,)  
-    fig,ax=plt.subplots(figsize=(6,4))
-    ax.imshow(density.values,cmap="Greens",aspect="auto")
-    ax.set_xticks(range(5))
-    ax.set_xticklabels(["L1","L2","L3","L4","L5"])
-    ax.set_yticks(range(4))
-    ax.set_yticklabels(["A","B","C","D"])
-    ax.set_xlabel("LSS operational maturity")
-    ax.set_ylabel("digital readiness") 
-    ax.set_title("position on the DARMM grid(n=120 MSMEs)")  
+def make_grid_image(lss_level, digital_level):
 
+    from db import fetch_all_responses
+    df = fetch_all_responses()
+
+    if df.empty or "darmm_position" not in df.columns:
+        density = pd.DataFrame(0, index=["A", "B", "C", "D"], columns=["L1", "L2", "L3", "L4", "L5"])
+        n_total = 0
+    else:
+        density = pd.crosstab(df["digital_level"], df["lss_level"])
+        density = density.reindex(index=["A", "B", "C", "D"],
+                                  columns=["L1", "L2", "L3", "L4", "L5"],
+                                  fill_value=0)
+        n_total = len(df)
+
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.imshow(density.values, cmap="Greens", aspect="auto")
+    ax.set_xticks(range(5))
+    ax.set_xticklabels(["L1", "L2", "L3", "L4", "L5"])
+    ax.set_yticks(range(4))
+    ax.set_yticklabels(["A", "B", "C", "D"])
+    ax.set_xlabel("LSS operational maturity")
+    ax.set_ylabel("digital readiness")
+    ax.set_title("Position on the DARMM grid (n=" + str(n_total) + " MSMEs)")
 
     for i in range(4):
         for j in range(5):
-            ax.text(j,i,str(density.values[i,j]),
-                    ha="center",va="center",fontsize=10)
+            ax.text(j, i, str(density.values[i, j]),
+                    ha="center", va="center", fontsize=10)
 
-    lss_idx=["L1","L2","L3","L4","L5"].index(lss_level)
-    dig_idx=["A","B","C","D"].index(digital_level)
-    ax.plot(lss_idx,dig_idx,"o",markersize=24,markerfacecolor="none",markeredgecolor="red",markeredgewidth=3)
-    ax.text(lss_idx,dig_idx-0.45,"YOU",ha="center",color="red",fontsize=11,fontweight="bold")
+    lss_idx = ["L1", "L2", "L3", "L4", "L5"].index(lss_level)
+    dig_idx = ["A", "B", "C", "D"].index(digital_level)
+    ax.plot(lss_idx, dig_idx, "o", markersize=24,
+            markerfacecolor="none", markeredgecolor="red", markeredgewidth=3)
+    ax.text(lss_idx, dig_idx - 0.45, "YOU", ha="center",
+            color="red", fontsize=11, fontweight="bold")
     plt.tight_layout()
-    tmp=tempfile.NamedTemporaryFile(suffix=".png",delete=False)
-    plt.savefig(tmp.name,dpi=150,bbox_inches="tight")
+    tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+    plt.savefig(tmp.name, dpi=150, bbox_inches="tight")
     plt.close(fig)
     return tmp.name
 
 
 
-## pdf builder
 def generate_report(response, lss_result, digital_result, company_name="Anonymous Enterprise"):
     pdf = FPDF()
     pdf.add_page()
 
-    #  COVER 
     pdf.set_font("Helvetica", "B", 20)
     pdf.cell(0, 12, _latin1("DARMM Self Assessment Report"), ln=True, align="C")
     pdf.set_font("Helvetica", "", 11)
@@ -300,25 +310,25 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
     pdf.cell(0, 6, "Date: " + datetime.now().strftime("%d %B %Y"), ln=True, align="C")
     pdf.ln(6)
 
-    #  EXECUTIVE SUMMARY 
+    # ---- 2. EXECUTIVE SUMMARY ----
     position = lss_result["lss_level"] + "-" + digital_result["digital_level"]
     pdf.set_font("Helvetica", "B", 15)
     pdf.cell(0, 10, "Your DARMM Position: " + position, ln=True)
 
     # Position context - how many MSMEs share this position in the 120 sample
-    df_sample = pd.read_csv(_CSV_PATH)
-    total = len(df_sample)
-    same_position = (df_sample["DARMM_Position"] == position).sum()
-    pct_at_position = round(same_position / total * 100)
-    pdf.set_font("Helvetica", "", 11)
-    pdf.multi_cell(0, 6,
-        "Out of " + str(total) + " surveyed MSMEs in Bangalore, " +
-        str(same_position) + " (" + str(pct_at_position) +
-        "%) share this DARMM position."
-    )
+    from db import fetch_all_responses
+    df_sample=fetch_all_responses()
+    total=len(df_sample)
+    if total>0:
+        same_position=(df_sample["darmm_position"]==position).sum()
+        pct_at_position=round(same_position/total*100) if total>0 else 0
+        pdf.set_font("Helvetica","",11)
+        pdf.multi_cell(0,6,"Out of"+str(total)+"surveyed MSMEs,"+str(same_position)+"("+str(pct_at_position)+"%) share this DARMM position.")
+    else:
+        pdf.set_font("Helvetica","",11)
+        pdf.multi_cell(0,6,"intial responses")    
     pdf.ln(2)
 
-    #3. GRID POSITION PLOT 
     grid_path = make_grid_image(lss_result["lss_level"], digital_result["digital_level"])
     pdf.image(grid_path, x=30, w=150)
     pdf.ln(4)
@@ -327,7 +337,6 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
     except OSError:
         pass
 
-    #  4. LSS SECTION 
     pdf.set_font("Helvetica", "B", 13)
     pdf.cell(0, 8, "Lean Six Sigma Maturity", ln=True)
     pdf.set_font("Helvetica", "", 11)
@@ -335,7 +344,6 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
     pdf.multi_cell(0, 6, _latin1(lss_result["lss_level_desc"]))
     pdf.ln(4)
 
-    # . DIGITAL SECTION + discrepancy flag
     pdf.set_font("Helvetica", "B", 13)
     pdf.cell(0, 8, "Digital Readiness", ln=True)
     pdf.set_font("Helvetica", "", 11)
@@ -347,8 +355,7 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
         pdf.multi_cell(0, 5, _latin1("Note: " + digital_result["discrepancy_flag"]))
     pdf.ln(4)
 
-    #  6. RECOMMENDATION PATHWAY
-    pdf.add_page() 
+    pdf.add_page()
     cluster_name, pathway, actions, source = get_pathway(
         lss_result["lss_level"], digital_result["digital_level"]
     )
@@ -358,7 +365,7 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
     pdf.multi_cell(0, 6, pathway)
     pdf.ln(3)
 
-#7. THREE FIRST ACTIONS 
+    # ---- 7. THREE FIRST ACTIONS ----
     if actions:
         pdf.set_font("Helvetica", "B", 12)
         pdf.cell(0, 8, "Your first three actions", ln=True)
@@ -368,7 +375,16 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
             pdf.ln(1)
     pdf.ln(4)
 
-   
+    # ---- 8. FOOTER ----
+    pdf.set_font("Helvetica", "I", 9)
+    pdf.multi_cell(0, 5, _latin1(
+        "DARMM is a research framework from NIT Calicut measuring two axes of "
+        "manufacturing maturity: Lean Six Sigma maturity (L1-L5) and Digital "
+        "Readiness (A-D). This report compares your enterprise against a "
+        "sample of 120 Bangalore MSMEs surveyed in 2026. "
+        "Research: Jith John Francis (P230090ME), supervised by "
+        "Dr. Vinay V. Panicker."
+    ))
     
 
     return bytes(pdf.output())

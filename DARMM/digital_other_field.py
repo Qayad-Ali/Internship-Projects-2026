@@ -1,4 +1,3 @@
-"""Digital Other field classifier. Maps free-text to a capability score on the 0-10 scale."""
 
 
 NAMED_TOOLS = {
@@ -84,10 +83,6 @@ NAMED_TOOLS = {
     "cad cam":                    (3.5, "CAD/CAM combined (Level B)"),
 }
 
-
-# When a respondent describes their tool rather than naming it, we look for
-# capability-signal phrases. The HIGHEST keyword score in the text wins.
-
 CAPABILITY_KEYWORDS = {
     # Tier D signals
     "iiot":                  (9.5, "IIoT keyword - Level D"),
@@ -126,24 +121,12 @@ CAPABILITY_KEYWORDS = {
 
 
 def classify_one_entry(raw_text):
-    """
-    Classify a single Q5.1 Other-field entry.
-    Returns (capability_score, notes).
-
-    Search order:
-      1. Named tool dictionary (longest keyword wins)
-      2. Capability-keyword fallback (highest score wins, not longest)
-      3. Default: score 0 with FLAG notes
-    """
+    
     text = raw_text.strip().lower()
     if not text:
         return (0.0, "Empty entry")
 
-    # 1. Try named tool dictionary - highest capability wins
-    # For digital scoring, the right answer when an entry mentions multiple
-    # tools is the most CAPABLE one, not the longest-named one. So if the
-    # respondent writes "Tableau and WhatsApp", Tableau (8.0) wins over
-    # WhatsApp (2.5) even though 'whatsapp' is the longer keyword.
+   
     best_score = -1.0
     best_keyword = None
     best_notes = None

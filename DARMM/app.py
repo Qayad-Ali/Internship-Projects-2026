@@ -1,4 +1,3 @@
-"""DARMM Self-Assessment Streamlit wizard. Run: python -m streamlit run app.py"""
 
 import os
 import streamlit as st
@@ -13,14 +12,12 @@ from report import generate_report
 
 
 
-# st.set_page_config must be the very first Streamlit call
 st.set_page_config(
     page_title="DARMM Self-Assessment",
     layout="wide",
 )
 
 
-# PAGE NAVIGATION HELPERS
 if "page" not in st.session_state:
     st.session_state.page = 0
 
@@ -43,7 +40,6 @@ def restart():
     st.session_state.page = 0
 
 
-# OFFICIAL RESEARCH HEADER
 st.markdown(
     "### Lean Six Sigma Awareness, Adoption, and Digital Readiness "
     "in General Engineering Manufacturing MSMEs — Bangalore, India"
@@ -54,7 +50,6 @@ st.caption(
 )
 st.divider()
 
-# Confidentiality and purpose statement (only shown on the first page)
 if st.session_state.page == 0:
     st.info(
         "**CONFIDENTIALITY AND PURPOSE STATEMENT**\n\n"
@@ -68,11 +63,9 @@ if st.session_state.page == 0:
         "current situation."
     )
 
-# DARMM title
 st.title("DARMM Self-Assessment")
 
 
-# CSS - make the two tab buttons bigger and more prominent
 st.markdown(
     """
     <style>
@@ -97,20 +90,16 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
-# TWO TABS: Self-Assessment wizard + Population Overview dashboard
 tab_self=st.container()
 
 
 with tab_self:
 
-    # Page tracker - only visible while the user is on the wizard tab
     st.progress(
         (st.session_state.page + 1) / 6,
         text="Page " + str(st.session_state.page + 1) + " of 6",
     )
 
-    # PAGE 0 - SECTION 1 (Company Profile)
     if st.session_state.page == 0:
         st.header(" Section 1 - Company Profile")
 
@@ -153,7 +142,6 @@ with tab_self:
         st.button("Next →", on_click=go_next)
 
 
-    # PAGE 1 - SECTION 2 (Awareness)
     elif st.session_state.page == 1:
         st.header(" Section 2 - Awareness")
 
@@ -169,7 +157,6 @@ with tab_self:
             key="q2_3",
         )
 
-        # Q2.4 is MANDATORY - index=None so nothing is pre-selected
         st.radio(
             "2.4  How would you rate your company's current knowledge of LSS? (required)",
             ["No knowledge at all",
@@ -191,11 +178,9 @@ with tab_self:
                 st.button("Next →", on_click=go_next)
 
 
-    # PAGE 2 - SECTION 3 (Adoption)
     elif st.session_state.page == 2:
         st.header(" Section 3 - Adoption")
 
-        # Q3.1 is MANDATORY
         st.radio(
             "3.1  Has your enterprise implemented any Lean tools or practices? (required)",
             ["Yes", "No"],
@@ -203,7 +188,6 @@ with tab_self:
             key="q3_1",
         )
 
-        # Skip logic: only show Q3.2 if Q3.1 == Yes
         if st.session_state.get("q3_1") == "Yes":
             st.multiselect(
                 "3.2  Which Lean tools have you implemented? (select all that apply)",
@@ -222,7 +206,6 @@ with tab_self:
             key="q3_3",
         )
 
-        # Skip logic: only show Q3.4 if Q3.3 == Yes
         if st.session_state.get("q3_3") == "Yes":
             st.multiselect(
                 "3.4  Which Six Sigma tools have you used? (select all that apply)",
@@ -269,7 +252,6 @@ with tab_self:
                 st.button("Next →", on_click=go_next)
 
 
-    # PAGE 3 - SECTION 4 (Barriers)
     elif st.session_state.page == 3:
         st.header(" Section 4 - Barriers")
 
@@ -327,7 +309,6 @@ with tab_self:
                 st.button("Next →", on_click=go_next)
 
 
-    # PAGE 4 - SECTION 5 (Digital Technology Adoption)
     elif st.session_state.page == 4:
         st.header(" Section 5 - Digital Technology Adoption")
 
@@ -376,18 +357,15 @@ with tab_self:
             st.button("Submit →", on_click=go_next)
 
 
-    # PAGE 5 - RESULT (scoring + DARMM heatmap)
     elif st.session_state.page == 5:
         st.header(" Your DARMM Result")
 
-        # Safety check
         if st.session_state.get("q2_4") is None or st.session_state.get("q3_1") is None:
             st.error("Q2.4 (knowledge level) or Q3.1 (Lean implementation) was not "
                      "answered. Please go back and complete those questions.")
             st.button("← Back to the survey", on_click=go_back)
             st.stop()
 
-        # Read every form value from session_state
         q2_1 = st.session_state.get("q2_1", "No")
         q2_2 = st.session_state.get("q2_2", "No")
         q2_4 = st.session_state.get("q2_4")
@@ -403,7 +381,6 @@ with tab_self:
         q5_1_other = st.session_state.get("q5_1_other", "")
         q5_2 = st.session_state.get("q5_2", "Level A - No digital tools; paper records only")
 
-        # Translation maps
         KNOWLEDGE_LEVEL_MAP = {
             "No knowledge at all": 1,
             "Basic awareness (heard of it, never implemented)": 2,
@@ -493,10 +470,9 @@ with tab_self:
             "self_rating":        SELF_RATING_MAP[q5_2],
         }
 
-        # Call the scoring engines
         lss_result = darmm_lss(engine_response)
         digital_result = darmm_digital(engine_response)
-        # Save to Supabase (once per session)
+        
         if not st.session_state.get("_response_saved"):
             cluster_name_db, _, _, source_db = get_pathway(
                 lss_result["lss_level"], digital_result["digital_level"]
@@ -523,7 +499,6 @@ with tab_self:
                  "  (score " + str(digital_result["digital_score"]) + ")")
         st.write(digital_result["digital_level_desc"])
 
-        # DARMM grid heatmap with respondent marker
         st.subheader("Your position on the DARMM grid")
         from db import fetch_all_responses
         df=fetch_all_responses()
@@ -537,7 +512,6 @@ with tab_self:
 
         fig = go.Figure()
 
-        # Layer 1: the heatmap (background colour = number of enterprises)
         fig.add_trace(go.Heatmap(
             z=density.values,
             x=density.columns.tolist(),
@@ -551,7 +525,6 @@ with tab_self:
         ))
 
         
-        # Layer 2: red dot at the respondent's position
         fig.add_trace(go.Scatter(
             x=[lss_result["lss_level"]],
             y=[digital_result["digital_level"]],
@@ -688,7 +661,6 @@ with tab_self:
                 st.plotly_chart(fig_belief,width='stretch')
                     
                    
-        # --- NEW: PDF download ---
         company_name_for_pdf = st.session_state.get("q1_1", "") or "Anonymous Enterprise"
         pdf_bytes = generate_report(
             engine_response, lss_result, digital_result, company_name_for_pdf
@@ -699,7 +671,7 @@ with tab_self:
             file_name="DARMM_Report_" + company_name_for_pdf.replace(" ", "_") + ".pdf",
             mime="application/pdf",
         )
-        # --- end NEW ---
+   
 
         st.button("Take the survey again", on_click=restart)
 

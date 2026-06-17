@@ -1,31 +1,16 @@
-"""Combined scoring wrapper: calls both engines and returns 5-field result with darmm_position."""
 
 from lss_scoring import darmm_lss
 from digital_scoring import darmm_digital
 
 
 def darmm_score(response):
-    """
-    Run both axes of the DARMM model and return the grid placement.
-
-    Args:
-        response: dict of survey answers (see lss_scoring.py and
-                  digital_scoring.py for the expected keys)
-
-    Returns:
-        dict with 5 fields - the Module 1 minimum:
-            lss_score, lss_level, digital_score, digital_level, darmm_position
-    """
-    # First get the LSS score and level
+    
     lss_result = darmm_lss(response)
 
-    # Then get the digital readiness score and level
     digital_result = darmm_digital(response)
 
-    # Build the grid position string like "L3-B"
     position = lss_result["lss_level"] + "-" + digital_result["digital_level"]
 
-    # Put everything together for the output
     output = {
         "lss_score":      lss_result["lss_score"],
         "lss_level":      lss_result["lss_level"],
@@ -39,7 +24,6 @@ def darmm_score(response):
 
 if __name__ == "__main__":
 
-    # A few test enterprises so I can check the engine end-to-end
     examples = [
         ("Ravi's Micro Shop (unaware, paper-only)", {
             "knowledge_level": 1,

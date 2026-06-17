@@ -7,6 +7,7 @@ from scipy.stats import pearsonr, chi2_contingency
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 
+
 def load_data(data_path=None):
     if data_path is None:
         data_path = os.path.join(_HERE, "Survey_Dataset_120_MSMEs.csv")

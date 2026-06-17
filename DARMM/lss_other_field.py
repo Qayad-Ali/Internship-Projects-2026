@@ -1,6 +1,4 @@
-"""LSS Other field classifier. Maps free-text entries to a 5-category framework (Cat A-E)."""
 
-# Max points a single Other field can contribute (Mr. Jith's Principle 2)
 OTHER_CAP = 2.0
 
 OTHER_FIELD_LOOKUP = {
@@ -146,9 +144,6 @@ def classify_one_entry(raw_text):
     if not text:
         return ("E", 0.0, None, "Empty entry")
 
-    # Walk through the lookup table and keep track of the LONGEST keyword
-    # that appears anywhere in the text. Longer matches beat shorter ones
-    # so "control plan" wins over "control".
     best_length = 0
     best_match = None
     for keyword, (cat, weight, maps_to, notes) in OTHER_FIELD_LOOKUP.items():
