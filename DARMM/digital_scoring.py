@@ -100,14 +100,12 @@ def calculate_digital_score(r):
                 #
                 flag = ("SIGNIFICANT DISCREPANCY: respondent self-rated " +
                         self_rating_letter + ", but tool stack only supports " +
-                        layer1_implied_level + ". Possible significant over-" +
-                        "confidence. Recommend digital capability audit.")
+                        layer1_implied_level )
             else:
                 
                 flag = ("SIGNIFICANT DISCREPANCY: respondent self-rated " +
                         self_rating_letter + ", but tool stack supports " +
-                        layer1_implied_level + ". Possible significant under-" +
-                        "confidence - digital capability may be underutilised.")
+                        layer1_implied_level )
 
     return {
         "layer1_tool_capability": round(layer1_score, 2),
