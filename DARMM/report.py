@@ -310,12 +310,10 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
     pdf.cell(0, 6, "Date: " + datetime.now().strftime("%d %B %Y"), ln=True, align="C")
     pdf.ln(6)
 
-    # ---- 2. EXECUTIVE SUMMARY ----
     position = lss_result["lss_level"] + "-" + digital_result["digital_level"]
     pdf.set_font("Helvetica", "B", 15)
     pdf.cell(0, 10, "Your DARMM Position: " + position, ln=True)
 
-    # Position context - how many MSMEs share this position in the 120 sample
     from db import fetch_all_responses
     df_sample=fetch_all_responses()
     total=len(df_sample)
@@ -365,7 +363,6 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
     pdf.multi_cell(0, 6, pathway)
     pdf.ln(3)
 
-    # ---- 7. THREE FIRST ACTIONS ----
     if actions:
         pdf.set_font("Helvetica", "B", 12)
         pdf.cell(0, 8, "Your first three actions", ln=True)
@@ -375,16 +372,8 @@ def generate_report(response, lss_result, digital_result, company_name="Anonymou
             pdf.ln(1)
     pdf.ln(4)
 
-    # ---- 8. FOOTER ----
-    pdf.set_font("Helvetica", "I", 9)
-    pdf.multi_cell(0, 5, _latin1(
-        "DARMM is a research framework from NIT Calicut measuring two axes of "
-        "manufacturing maturity: Lean Six Sigma maturity (L1-L5) and Digital "
-        "Readiness (A-D). This report compares your enterprise against a "
-        "sample of 120 Bangalore MSMEs surveyed in 2026. "
-        "Research: Jith John Francis (P230090ME), supervised by "
-        "Dr. Vinay V. Panicker."
-    ))
+    
+    
     
 
     return bytes(pdf.output())
